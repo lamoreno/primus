@@ -55,21 +55,28 @@ program primus_xml, rclass
 	//default variable of 
 	if "`welflist'"=="" local welflist welfare
 	if "`weightlist'"=="" local weightlist `theW'
-	if "`pppyear'"=="" local pppyear 2017
+	if "`pppyear'"=="" local pppyear 2021
 	if "`plines'"=="" {
 		if `pppyear'==2021 {
-			local plines 3.00
-			local threshold 0.25
+			local plines 3.00 4.20 8.30
+			local threshold 0.28
+			local psgap 28
 		}
 		if `pppyear'==2017 {
-			local plines 2.15 3.65
+			local plines 2.15 3.65 6.85
 			local threshold 0.25
+			local psgap 25
 		}
 		if `pppyear'==2011 {
 			local plines 1.9 3.2
 			local threshold 0.22
+			local psgap 22
 		}
-		if `pppyear'==2005 local plines 1.25 2.0
+		if `pppyear'==2005 {
+			local plines 1.25 2.0
+			local threshold 0.22
+			local psgap 22
+		}
 	}
 	local method EmbeddedCPI
 	log off logall
@@ -332,6 +339,16 @@ program primus_xml, rclass
 					local PovertyLine_PPP = `pline'
 					local PPPadjuster = `PPPValue'*`CPIValue'
 					local ByVarShare = (`ReqYearPopulation'/`TotalPopAll')*100
+					//GiniPIP
+					ainequal `var'_PPP [aw=`wt'],all
+					local Gini2 = 100*`=r(gini_1)'
+					
+					//Prosperity Gap
+					tempvar prosgap
+					gen `prosgap' = `psgap'/`var'_PPP
+					su `prosgap' [aw=`wt']
+					local ProsGap = r(mean)
+					drop `prosgap'
 					
 					log on logall
 					dis "apoverty `var'_PPP [aw=`wt'], line(`pline') all"
@@ -348,8 +365,10 @@ program primus_xml, rclass
 					file write `outfile' _col(8) `"<![CDATA["' _n
 					file write `outfile' _col(8) `"METHOD;`METHOD'"' _n
 					file write `outfile' _col(8) `"PPPValue;`PPPValue'"' _n
-					file write `outfile' _col(8) `"CPIValue;`CPIValue'"' _n
+					file write `outfile' _col(8) `"CPIValue;`CPIValue'"' _n					
 					file write `outfile' _col(8) `"MeanPPP;`MeanPPP'"' _n
+					file write `outfile' _col(8) `"GiniPIP;`Gini2'"' _n
+					file write `outfile' _col(8) `"ProsperityGap;`ProsGap'"' _n
 					file write `outfile' _col(8) `"PovertyLine_LCU;`PovertyLine_LCU'"' _n
 					file write `outfile' _col(8) `"PovertyLine_PPP;`PovertyLine_PPP'"' _n
 					file write `outfile' _col(8) `"PPPadjuster;`PPPadjuster'"' _n
@@ -370,7 +389,6 @@ program primus_xml, rclass
 		file write `outfile' _col(4) `"</Welfare>"' _n
 		local j = `j' + 1
 	} //welfare
-
 
 	//end
 	file write `outfile' _col(2) `"</Result>"' _n

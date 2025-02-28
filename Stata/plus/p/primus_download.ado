@@ -177,8 +177,8 @@ program primus_download, rclass
 		
 		*noi dis `"primus_api, option(`option') query("`parm_trans'=`tranxid0'&processid=`processid'&server=${webserver}") outfile(`primusout')"'
 		primus_api, option(`option') query("`parm_trans'=`tranxid0'&processid=`processid'&server=${webserver}") outfile(`primusout')
-		if `primusrc'==0 {
-			cap insheet using "`primusout'", clear
+		if `primusrc'==0 {			
+			cap import delim using "`primusout'", stripquotes(no) clear
 			if _rc==0 {
 				noi dis as text in yellow "PRIMUS data or xml is loaded in Stata. Browse and see."
 				if "`xml'"~="" & "`outfile'"~="" {					
