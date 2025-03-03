@@ -33,7 +33,7 @@ program define primus_gmdupload, rclass
            FULLsurveyid(string)                     ///           
            OTHERVARiables(varlist)              ///              
            SAVEPath(string)                     ///
-           ICPbase(integer 2017)                ///           
+           ICPbase(integer 2021)                ///           
            replace                              ///
 		   NOPOVcal                             ///		   
            level(varname)                       ///
@@ -157,7 +157,7 @@ program define primus_gmdupload, rclass
 		
 		* ICPbase
 		if !inlist(`icpbase', 2005, 2011, 2017, 2021) {
-			noi disp in red "ICPbase variable must be either 2005 or 2011 or 2017 or 2021. Default 2017."
+			noi disp in red "ICPbase variable must be either 2005 or 2011 or 2017 or 2021. Default 2021."
 			local flagerr = 1
 		}
 		else {
@@ -461,15 +461,10 @@ program define primus_gmdupload, rclass
 		tempfile dataoutfin
 		save `dataoutfin', replace
 		
-		//Price database!
-		*cap datalibweb, country(Support) year(2005) type(GMDRAW) surveyid(`pfwid') filename(Final_CPI_PPP_to_be_used.dta) clear files
-		*di r(cmdline)
-		*local priceproblem=_rc
-		*if (`priceproblem'==0) {
+		//Price database!		
 		cap datalibweb, country(support) year(2005) type(GMDRAW) surveyid(`pfwid') filename(Final_CPI_PPP_to_be_used.dta) clear files
 		if (_rc==0) {
-			cap keep if upper(code)==upper("`countrycode'")
-			*if (_rc) keep if upper(countrycode)==upper("`countrycode'")
+			cap keep if upper(code)==upper("`countrycode'")			
 			tempfile cpi_
 			save `cpi_'
 		}
@@ -536,8 +531,12 @@ program define primus_gmdupload, rclass
 		tempfile upload1
 		
 		use `dataoutfin', clear	
+		foreach vout in _all_ cpi2011 icp2011 cpi2017 icp2017 cpi2021 icp2021 icpbase cpi ppp {
+			cap drop `vout'
+		}
 		char _dta[filename] `filename'
 		char _dta[tranxid] `prmTransID'
+		compress
 		saveold "`dirpath'\\`filename'", replace
 			
 		if "`module'"~="ALL" {
@@ -552,9 +551,7 @@ program define primus_gmdupload, rclass
 			primus upload, processid(${processid}) surveyid(`foldername') type(harmonized) folderpath(${folderpath}) infile("`dirpath'\\`filename'") tranxid(`prmTransID')
 			noi return list
 			rm "`dirpath'\\`filename'"
-			
-			*local _gpwg_a = r(gpwg_a)
-			*local _gpwg_m = r(gpwg_m)
+						
 			if ("`overwrite'"=="") {
 				//Split, save the file, and upload
 				use `dataoutfin', clear		
@@ -573,7 +570,7 @@ program define primus_gmdupload, rclass
 				keep code year hhid pid welfare welfare* weight `oklist' 					
 				char _dta[filename] `filenameGPWG'
 				char _dta[tranxid] `prmTransID'
-				
+				compress
 				saveold "`dirpath'\\`filenameGPWG'", replace
 				
 				primus upload, processid(${processid}) surveyid(`foldername') type(harmonized) folderpath(${folderpath}) infile("`dirpath'\\`filenameGPWG'") tranxid(`prmTransID')
