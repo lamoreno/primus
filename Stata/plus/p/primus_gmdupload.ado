@@ -476,7 +476,7 @@ program define primus_gmdupload, rclass
 		
 		//merge CPI in from the system
 		use `dataoutfin', clear
-		qui if strpos("`survey''","EU-SILC")>0 replace year = year - 1				//EUSILC year
+		qui if strpos("`survey'","EU-SILC")>0 replace year = year - 1				//EUSILC year
 		qui if "`=upper("`countrycode'")'"=="CHN" | "`=upper("`countrycode'")'"=="IND"  gen datalevel = urban						
 		else gen datalevel = 2	
 		gen survname = "`survey'"
@@ -485,7 +485,7 @@ program define primus_gmdupload, rclass
 		qui drop _mcpi
 		cap drop datalevel 
 		cap drop ppp_note
-		qui if strpos("$surveyid","EU-SILC")>0 replace year = year + 1				//EUSILC year
+		qui if strpos("`survey'","EU-SILC")>0 replace year = year + 1				//EUSILC year
 		save `dataoutfin', replace
 
 		*===============================================================================
